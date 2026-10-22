@@ -40,29 +40,29 @@ export default function ProfileScreen({ user, onNavigateNotifications }) {
   const [savingPassword, setSavingPassword] = useState(false);
 
   // Tải dữ liệu hồ sơ từ Firestore
-  const loadProfile = async () => {
-    if (!user?.uid) return;
-    setLoadingProfile(true);
-    try {
-      const data = await getUserProfile(user.uid);
-      if (data) {
-        setFullName(data.fullName || user.displayName || '');
-        setPhoneNumber(data.phoneNumber || '');
-        setAddress(data.address || '');
-        if (data.email) setCurrentEmail(data.email);
-      } else {
-        setFullName(user.displayName || '');
-      }
-    } catch (error) {
-      console.warn('Lỗi tải dữ liệu người dùng:', error);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-
   useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.uid) return;
+      setLoadingProfile(true);
+      try {
+        const data = await getUserProfile(user.uid);
+        if (data) {
+          setFullName(data.fullName || user.displayName || '');
+          setPhoneNumber(data.phoneNumber || '');
+          setAddress(data.address || '');
+          if (data.email) setCurrentEmail(data.email);
+        } else {
+          setFullName(user.displayName || '');
+        }
+      } catch (error) {
+        console.warn('Lỗi tải dữ liệu người dùng:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
     loadProfile();
-  }, [user?.uid]);
+  }, [user?.uid, user?.displayName]);
 
   // 1. Cập nhật Họ tên, Số điện thoại và Địa chỉ
   const handleUpdateContactInfo = async () => {

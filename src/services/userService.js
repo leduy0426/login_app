@@ -1,4 +1,3 @@
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 /**
@@ -6,10 +5,9 @@ import { db } from '../config/firebase';
  */
 export const getUserProfile = async (uid) => {
   if (!uid) return null;
-  const userDocRef = doc(db, 'users', uid);
-  const docSnap = await getDoc(userDocRef);
+  const docSnap = await db.collection('users').doc(uid).get();
 
-  if (docSnap.exists()) {
+  if (docSnap.exists) {
     return docSnap.data();
   }
   return null;
@@ -21,14 +19,12 @@ export const getUserProfile = async (uid) => {
 export const updateUserProfile = async (uid, updatedFields) => {
   if (!uid) throw new Error('Không có UID');
 
-  const userDocRef = doc(db, 'users', uid);
   const dataToUpdate = {
     ...updatedFields,
     updatedAt: new Date().toISOString(),
   };
 
-  // setDoc với merge: true giúp tránh lỗi nếu tài liệu chưa tồn tại trước đó
-  await setDoc(userDocRef, dataToUpdate, { merge: true });
+  await db.collection('users').doc(uid).set(dataToUpdate, { merge: true });
   return dataToUpdate;
 };
 
@@ -38,9 +34,7 @@ export const updateUserProfile = async (uid, updatedFields) => {
 export const saveUserPushToken = async (uid, pushToken) => {
   if (!uid || !pushToken) return;
 
-  const userDocRef = doc(db, 'users', uid);
-  await setDoc(
-    userDocRef,
+  await db.collection('users').doc(uid).set(
     {
       pushToken,
       lastTokenUpdate: new Date().toISOString(),

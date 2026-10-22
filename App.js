@@ -9,12 +9,9 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { onAuthStateChanged } from 'firebase/auth';
 
 import { auth } from './src/config/firebase';
-import {
-  registerForPushNotificationsAsync,
-} from './src/services/notificationService';
+import { registerForPushNotificationsAsync } from './src/services/notificationService';
 import { saveUserPushToken } from './src/services/userService';
 
 // Screens
@@ -42,11 +39,10 @@ export default function App() {
 
   // 1. Lắng nghe trạng thái đăng nhập Firebase Auth
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
       setAuthChecking(false);
 
-      // Nếu user đã đăng nhập và đã có push token, đồng bộ lên Firestore
       if (user && pushToken) {
         try {
           await saveUserPushToken(user.uid, pushToken);
@@ -82,7 +78,6 @@ export default function App() {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         setLastNotification(response.notification);
-        // Tự động chuyển người dùng sang màn hình xem thông báo
         if (currentUser) {
           setMainScreen('notifications');
         }
@@ -97,7 +92,7 @@ export default function App() {
         responseListener.current.remove();
       }
     };
-  }, [currentUser?.uid]);
+  }, [currentUser]);
 
   // Màn hình chờ khi đang kiểm tra phiên đăng nhập
   if (authChecking) {
