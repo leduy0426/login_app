@@ -18,6 +18,11 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "owner": "le_duy"
+    "owner": "le_duy",
+    "extra": {
+      "eas": {
+        "projectId": "d4c4a0bc-d09d-4886-810c-ec54a9bf48e7"
+      }
+    }
   }
 }
