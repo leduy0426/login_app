@@ -1,0 +1,21 @@
+{
+  "name": "login_app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "expo": "~57.0.27",
+    "expo-device": "~57.0.0",
+    "expo-notifications": "~57.0.22",
+    "expo-status-bar": "~57.0.1",
+    "firebase": "^10.14.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
