@@ -1,15 +1,4 @@
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  updateEmail,
-  updatePassword,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updateProfile,
-} from 'firebase/auth';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { firebase, auth, db } from '../config/firebase';
 
 /**
  * Chuyển đổi mã lỗi Firebase Auth sang thông báo tiếng Việt dễ hiểu
@@ -47,7 +36,7 @@ export const getFriendlyAuthErrorMessage = (error) => {
  * Đăng nhập người dùng bằng Email và Mật khẩu
  */
 export const loginUser = async (email, password) => {
-  const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+  const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
   return userCredential.user;
 };
 
@@ -57,19 +46,18 @@ export const loginUser = async (email, password) => {
 export const registerUser = async (email, password, profileData = {}) => {
   const { fullName = '', phoneNumber = '', address = '' } = profileData;
 
-  const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+  const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
   const user = userCredential.user;
 
   if (fullName) {
     try {
-      await updateProfile(user, { displayName: fullName });
+      await user.updateProfile({ displayName: fullName });
     } catch (e) {
       console.warn('Lỗi cập nhật profile display name:', e);
     }
   }
 
-  const userDocRef = doc(db, 'users', user.uid);
-  await setDoc(userDocRef, {
+  await db.collection('users').doc(user.uid).set({
     uid: user.uid,
     email: user.email,
     fullName: fullName.trim(),
@@ -86,7 +74,7 @@ export const registerUser = async (email, password, profileData = {}) => {
  * Đăng xuất tài khoản
  */
 export const logoutUser = async () => {
-  await signOut(auth);
+  await auth.signOut();
 };
 
 /**
@@ -98,13 +86,15 @@ export const updateUserEmail = async (newEmail) => {
 
   const trimmedEmail = newEmail.trim();
 
-  await updateEmail(user, trimmedEmail);
+  await user.updateEmail(trimmedEmail);
 
-  const userDocRef = doc(db, 'users', user.uid);
-  await updateDoc(userDocRef, {
-    email: trimmedEmail,
-    updatedAt: new Date().toISOString(),
-  });
+  await db.collection('users').doc(user.uid).set(
+    {
+      email: trimmedEmail,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
 
   return trimmedEmail;
 };
@@ -116,7 +106,7 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
   const user = auth.currentUser;
   if (!user || !user.email) throw new Error('Chưa đăng nhập');
 
-  const credential = EmailAuthProvider.credential(user.email, currentPassword);
-  await reauthenticateWithCredential(user, credential);
-  await updatePassword(user, newPassword);
+  const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+  await user.reauthenticateWithCredential(credential);
+  await user.updatePassword(newPassword);
 };

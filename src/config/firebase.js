@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import 'firebase/firestore';
 
 /**
  * CẤU HÌNH FIREBASE PROJECT (MMA301)
@@ -14,8 +14,12 @@ export const firebaseConfig = {
   appId: "1:223848972731:web:789cbafd343836dd8f449e"
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Khởi tạo an toàn cho Expo Snack & Fast Refresh
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
-export { app, auth, db };
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+export { firebase, auth, db };
