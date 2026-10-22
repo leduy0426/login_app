@@ -1,4 +1,15 @@
-import { firebase, auth, db } from '../config/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  updateEmail,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 /**
  * Chuyển đổi mã lỗi Firebase Auth sang thông báo tiếng Việt dễ hiểu
@@ -36,7 +47,7 @@ export const getFriendlyAuthErrorMessage = (error) => {
  * Đăng nhập người dùng bằng Email và Mật khẩu
  */
 export const loginUser = async (email, password) => {
-  const userCredential = await auth.signInWithEmailAndPassword(email.trim(), password);
+  const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
   return userCredential.user;
 };
 
@@ -46,21 +57,19 @@ export const loginUser = async (email, password) => {
 export const registerUser = async (email, password, profileData = {}) => {
   const { fullName = '', phoneNumber = '', address = '' } = profileData;
 
-  // 1. Tạo user trên Firebase Authentication
-  const userCredential = await auth.createUserWithEmailAndPassword(email.trim(), password);
+  const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
   const user = userCredential.user;
 
-  // 2. Cập nhật Display Name trong Firebase Auth
   if (fullName) {
     try {
-      await user.updateProfile({ displayName: fullName });
+      await updateProfile(user, { displayName: fullName });
     } catch (e) {
       console.warn('Lỗi cập nhật profile display name:', e);
     }
   }
 
-  // 3. Khởi tạo tài liệu người dùng trong Cloud Firestore
-  await db.collection('users').doc(user.uid).set({
+  const userDocRef = doc(db, 'users', user.uid);
+  await setDoc(userDocRef, {
     uid: user.uid,
     email: user.email,
     fullName: fullName.trim(),
@@ -77,7 +86,7 @@ export const registerUser = async (email, password, profileData = {}) => {
  * Đăng xuất tài khoản
  */
 export const logoutUser = async () => {
-  await auth.signOut();
+  await signOut(auth);
 };
 
 /**
@@ -89,17 +98,13 @@ export const updateUserEmail = async (newEmail) => {
 
   const trimmedEmail = newEmail.trim();
 
-  // 1. Cập nhật trong Firebase Auth
-  await user.updateEmail(trimmedEmail);
+  await updateEmail(user, trimmedEmail);
 
-  // 2. Đồng bộ trường email trên Firestore
-  await db.collection('users').doc(user.uid).set(
-    {
-      email: trimmedEmail,
-      updatedAt: new Date().toISOString(),
-    },
-    { merge: true }
-  );
+  const userDocRef = doc(db, 'users', user.uid);
+  await updateDoc(userDocRef, {
+    email: trimmedEmail,
+    updatedAt: new Date().toISOString(),
+  });
 
   return trimmedEmail;
 };
@@ -111,10 +116,7 @@ export const updateUserPassword = async (currentPassword, newPassword) => {
   const user = auth.currentUser;
   if (!user || !user.email) throw new Error('Chưa đăng nhập');
 
-  // 1. Xác thực lại với mật khẩu hiện tại
-  const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
-  await user.reauthenticateWithCredential(credential);
-
-  // 2. Cập nhật mật khẩu mới
-  await user.updatePassword(newPassword);
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+  await updatePassword(user, newPassword);
 };

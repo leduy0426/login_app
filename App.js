@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import { auth } from './src/config/firebase';
 import { registerForPushNotificationsAsync } from './src/services/notificationService';
@@ -39,7 +40,7 @@ export default function App() {
 
   // 1. Lắng nghe trạng thái đăng nhập Firebase Auth
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setAuthChecking(false);
 
