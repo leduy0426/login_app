@@ -16,6 +16,7 @@ export default function NotificationScreen({
   lastNotification,
   onNavigateBack,
 }) {
+  const [currentToken, setCurrentToken] = useState(pushToken);
   const [testTitle, setTestTitle] = useState('🔥 Firebase Push Notification');
   const [testBody, setTestBody] = useState(
     'Ứng dụng MMA301 vừa nhận được thông báo đẩy thành công!'
@@ -23,16 +24,32 @@ export default function NotificationScreen({
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleCopyToken = () => {
-    if (!pushToken) {
+  useEffect(() => {
+    if (pushToken) {
+      setCurrentToken(pushToken);
+    } else {
+      registerForPushNotificationsAsync().then((t) => {
+        if (t) setCurrentToken(t);
+      });
+    }
+  }, [pushToken]);
+
+  const handleCopyToken = async () => {
+    let tokenToCopy = currentToken || pushToken;
+    if (!tokenToCopy) {
+      tokenToCopy = await registerForPushNotificationsAsync();
+      if (tokenToCopy) setCurrentToken(tokenToCopy);
+    }
+
+    if (!tokenToCopy) {
       Alert.alert(
         'Chưa có Token',
-        'Vui lòng chạy ứng dụng trên thiết bị thật (Physical device) hoặc cấp quyền thông báo để sinh Token.'
+        'Vui lòng cấp quyền thông báo trong cài đặt điện thoại.'
       );
       return;
     }
     setCopied(true);
-    Alert.alert('Đã sao chép Push Token', pushToken);
+    Alert.alert('Đã sao chép Push Token', tokenToCopy);
     setTimeout(() => setCopied(false), 3000);
   };
 
@@ -83,7 +100,7 @@ export default function NotificationScreen({
 
           <View style={styles.tokenBox}>
             <Text style={styles.tokenText} selectable numberOfLines={3}>
-              {pushToken || 'Đang lấy Token hoặc chạy trên môi trường không hỗ trợ thiết bị thật...'}
+              {currentToken || pushToken || 'Đang tải Token...'}
             </Text>
           </View>
 
