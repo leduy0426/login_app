@@ -147,20 +147,32 @@ export default function ProfileScreen({ user, onNavigateNotifications }) {
     }
   };
 
-  // 4. Đăng xuất
-  const handleLogout = () => {
+  // 4. Đăng xuất (Hỗ trợ cả Mobile và Web)
+  const handleLogout = async () => {
+    const doLogout = async () => {
+      try {
+        await logoutUser();
+      } catch (e) {
+        console.error('Lỗi đăng xuất:', e);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = typeof window !== 'undefined' && window.confirm
+        ? window.confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?')
+        : true;
+      if (confirmed) {
+        await doLogout();
+      }
+      return;
+    }
+
     Alert.alert('Đăng Xuất', 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?', [
       { text: 'Hủy', style: 'cancel' },
       {
         text: 'Đăng Xuất',
         style: 'destructive',
-        onPress: async () => {
-          try {
-            await logoutUser();
-          } catch (e) {
-            console.error('Lỗi đăng xuất:', e);
-          }
-        },
+        onPress: doLogout,
       },
     ]);
   };
