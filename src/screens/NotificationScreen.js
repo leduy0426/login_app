@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,10 @@ import {
 } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
-import { sendLocalTestNotification } from '../services/notificationService';
+import {
+  sendLocalTestNotification,
+  registerForPushNotificationsAsync,
+} from '../services/notificationService';
 
 export default function NotificationScreen({
   pushToken,
